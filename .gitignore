@@ -1,2 +1,10 @@
 *.class
 
+<<<<<<< HEAD
+=======
+# Package Files #
+*.jar
+*.war
+*.ear
+*.txt
+>>>>>>> ac10bfa97e6323040349218c53fb9945ae41a705
