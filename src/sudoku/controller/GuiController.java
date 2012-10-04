@@ -1,8 +1,6 @@
 package sudoku.controller;
 
 import java.util.LinkedList;
-import java.util.Observable;
-import java.util.Observer;
 
 import sudoku.model.Model;
 import sudoku.view.FirstGui;
@@ -10,7 +8,6 @@ import sudoku.view.IView;
 import sudoku.view.PreferenciasGui;
 import sudoku.view.SecondGui;
 import utils.Constants;
-import utils.Pair;
 
 /**
  * Clase que se encarga de controlar las acciones de cada uno de los botones de
@@ -19,17 +16,19 @@ import utils.Pair;
  * @author karma-ELSE
  * 
  */
-public class GuiController implements IController, Observer {
+public class GuiController implements IController
+{
 
-	private int dificultad = Constants.FACIL;
-	private IView previaView;
-	private IView view;
-	private Model modelo = new Model();
-	private boolean ventanasAbiertasDistintasDeSudoku = false;
+	private int										difficulty_												= Constants.FACIL;
+	private IView									viewPrevious_;
+	private IView									view_;
+	private Model									model_;
+	private boolean								hasOpenViewsDiferentThansSudoku_	= false;
+	private boolean								canLoadObserver_									= true;
+	private static GuiController	instance													= null;
 
-	private static GuiController instance = null;
-
-	public static GuiController getIntance() {
+	public static GuiController getIntance()
+	{
 		if (instance == null) {
 			instance = new GuiController();
 		}
@@ -37,171 +36,204 @@ public class GuiController implements IController, Observer {
 	}
 
 	private GuiController() {
+		model_ = new Model();
 	}
 
 	@Override
-	public void setView(IView view) {
-		this.view = view;
+	public void setView(IView view)
+	{
+		this.view_ = view;
 	}
 
 	@Override
-	public void process(String model) {
+	public void process(String model)
+	{
 		model = model.trim();
 
-		modelo.addObserver((Observer) this);
+		if (canLoadObserver_) {
+			model_.loadObserver(view_);
+			canLoadObserver_ = false;
+		}
 
 		if (model.compareTo("Nuevo Juego") == 0) {
 			// Empieza un nuevo juego
-			nuevoJuego();
+			newGame();
 		}
 
 		if (model.compareTo("Detener") == 0) {
 			// Detiene la partida actual
-			detener();
+			stopGame();
 
 		}
 		if (model.compareTo("Preferencias") == 0) {
 			// Maneja las preferencias del juego
-			preferencias();
+			preferences();
 
 		}
+
 		if (model.compareTo("Resolver") == 0) {
-			if (modelo.getTableroResuelto())
-				view.present("Sudoku Resuelto");
-			else
-				view.present("Para resolver el tablero deberá de iniciar un juego nuevo.");
-			// reolver el sudoku de la partida actual
+			resolve();
 		}
+
 		if (model.compareTo("Borrar") == 0) {
 			// reinicia el juego actual
-			borrarTablero();
+			deletePlays();
 		}
+
 		if (model.compareTo("Pista") == 0) {
 			// Ofrece una pista al jugador
-			ofrecerPista();
+			provideClue();
 		}
+
 		if (model.compareTo("Cambiar vista") == 0) {
 			// Intercambia interfaces
 			swapGui();
 		}
+
 		if (model.compareTo("Acerca de") == 0) {
 			// Menu Ayuda sobre las reglas del juego
-			view.present(Constants.AYUDA);
+			view_.present(Constants.AYUDA);
 
 		}
+
 		if (model.compareTo("Salir") == 0) {
 			// sale de la aplicacion
-			salir();
+			exit();
 		}
+
 		if (model.compareTo("Cancelar") == 0) {
 			// Cancelar perteneciente a PREFERENCIAS
-			view.dispose();
-			ventanasAbiertasDistintasDeSudoku = false;
+			view_.dispose();
+			hasOpenViewsDiferentThansSudoku_ = false;
 			PreferenciasGui.setNullIntance();
-			view = previaView;// retorno a la vista que estaba
+			view_ = viewPrevious_;// retorno a la vista que estaba
 		}
 		// acpetar perteneciente a PREFERENCIAS
 		if (model.compareTo("Aceptar") == 0) {
-			runPreferencias((PreferenciasGui) view);
-			ventanasAbiertasDistintasDeSudoku = false;
+			runPreferencias((PreferenciasGui) view_);
+			hasOpenViewsDiferentThansSudoku_ = false;
 			PreferenciasGui.setNullIntance();
 
 		}
+
 		if (model.compareTo("Top-Ten") == 0) {
 			// muestra el top-ten por la view que este en juego
-			mostrarTopTen();
+			showTopTen();
 		}
 		if (model.charAt(0) == '|') {
 			// model : Trae lo ingresado por usuario en el juego como string
 			// manejo de input sobre la matriz de la view
-			teclasAceptadas(model);
+			acceptedKeys(model);
 		}
 
 	}
 
-	private void borrarTablero() {
-		modelo.restaurar();
+	private void resolve()
+	{
+		if (model_.isRunningGame()) {
+			model_.setTrueIsPressResolve();
+			model_.endGame();
+			view_.present("Solucion");
+		} else
+			view_.present("Opcion no valida, inicie un juego");
+
 	}
 
-	private void detener() {
-		modelo.timeStop();
-		modelo.setFalseSePresionoDetener();
+	private void deletePlays()
+	{
+		model_.restoreBoard();
+	}
+
+	private void stopGame()
+	{
+		model_.setTruePressStop();// avisa que se presiono stop
+		model_.endGame();
+		// se podria borrar el tablero ACA
+
 	}
 
 	// este model trae el numero y las posiciones i,j
-	private void teclasAceptadas(String model) {
+	private void acceptedKeys(String model)
+	{
 		int posI = this.getSecond(model);
 		int posJ = this.getThird(model);
 		int number = this.getFirst(model);
-		((sudoku.view.AbstractView) view).setTextinMatrix(posI, posJ, number,
+		((sudoku.view.AbstractView) view_).setNumberInSudoku(posI, posJ, number,
 				Constants.TECLA_INGRESADA);
-		modelo.setTableroPos(posI, posJ, number);
+		model_.setBoardPos(posI, posJ, number);
 
 		// si entra por aca es porque en el mejor de los casos completo el
 		// tablero correctamente o lo lleno pero incorrectamente
-		if (modelo.cantidadMovimiento() >= modelo.cantidadEspacioLibres()) {
+		if (model_.getMovementAmount() >= model_.getAmountFreeSpace()) {
 			// ver si termino ok el juego para terminarlo
-			if (modelo.isLlenoSudoku()) {
-				modelo.timeStop();
-				modelo.cortarJuegoModelo();
-				if (modelo.pedirNombre()) {
-					view.present("Juego finalizado. FELICITACIONES \n cantidad de movimiento : "
-							+ modelo.cantidadMovimiento());
+			if (model_.isSolvedSudoku()) {
+				model_.endGame();
+				if (model_.nameRequest()) {// si el usuario tiene que entrar el top-ten
+					view_
+							.present("Juego finalizado. FELICITACIONES \n cantidad de movimiento : "
+									+ model_.getMovementAmount());
 					this.obtenerNombreTopTen();
-					modelo.guardarEnTopTen();
-					((sudoku.view.AbstractView) view).dibujarNumeros(null);
-				} else {
-					view.present("Juego finalizado. FELICITACIONES \n cantidad de movimiento : "
-							+ modelo.cantidadMovimiento());
-					((sudoku.view.AbstractView) view).dibujarNumeros(null);
+					model_.saveInTopTen();
+					((sudoku.view.AbstractView) view_).drawingBoard(null);// vacia el sdku
+				} else {// si el usuario no ingresa al top-ten
+					view_
+							.present("Juego finalizado. FELICITACIONES \n cantidad de movimiento : "
+									+ model_.getMovementAmount());
+					((sudoku.view.AbstractView) view_).drawingBoard(null);
 				}
 			}
 		}
 	}
 
-	private void salir() {
+	private void exit()
+	{
 		boolean salirOk = false;
 		if (this.verificacion()) {
 			salirOk = true;
-			view.dispose();
-			modelo.salvarCambios();
+			view_.dispose();
+			model_.saveChanges();
 			// ACA LLAMAR EL SALVAR CAMBIOS DE MODELO QUE GUARDA LA LISTA DE
 			// TOPTEN EN ARCHIVO
 			// ES DISTINTO AL GUARDAR SALVAR(GRABA)
 		}
 		if (!salirOk) {
-			view.present("Cierre todas las ventas del juego, \n Si ya esta ejecutando una partida, primero detengala");
+			view_
+					.present("Cierre todas las ventas del juego, \n Si ya esta ejecutando una partida, primero detengala");
 		}
 	}
 
 	/**
 	 * Abre las preferencias si es posible
 	 */
-	private void preferencias() {
-		if (!modelo.seEstaJugando()) {// si no se esta jugando
-			previaView = view;
+	private void preferences()
+	{
+		if (!model_.isRunningGame()) {// si no se esta jugando
+			viewPrevious_ = view_;
 			PreferenciasGui.getIntance();// singleton de preferencias
-			ventanasAbiertasDistintasDeSudoku = true;
+			hasOpenViewsDiferentThansSudoku_ = true;
 		} else
-			view.present("Detenga la partida actual para poder acceder a preferencias\n o puede que ya este abierto el cartel preferencias");
+			view_
+					.present("Detenga la partida actual para poder acceder a preferencias\n o puede que ya este abierto el cartel preferencias");
 	}
 
 	/**
 	 * Muestra el top-ten por pantalla
 	 */
-	private void mostrarTopTen() {
+	private void showTopTen()
+	{
 		boolean showTopTen = false;
 		if (this.verificacion()) {
 			showTopTen = true;
-			LinkedList<String> lista = modelo.getTopTen(this.dificultad);
+			LinkedList<String> lista = model_.getTopTen(this.difficulty_);
 			String s = "Nombre y puntaje: \n";
 			for (int i = 0; i < lista.size(); i++) {
 				s = s + (i + 1) + "°: " + lista.get(i) + "\n";
 			}
-			view.present(s);
+			view_.present(s);
 		}
 		if (!showTopTen) {
-			view.present("Cierre todas las ventas del juego \n Si ya esta ejecutando una partida, primero detengala");
+			view_
+					.present("Cierre todas las ventas del juego \n Si ya esta ejecutando una partida, primero detengala");
 		}
 	}
 
@@ -209,68 +241,73 @@ public class GuiController implements IController, Observer {
 	 * Intercambia las interfaces graficas
 	 * 
 	 */
-	private void swapGui() {
+	private void swapGui()
+	{
 		boolean cambiar = false;
-		if (!modelo.seEstaJugando()) {// si no se esta juegando
+		if (!model_.isRunningGame()) {// si no se esta juegando
 			// si no esta abierta preferencias
-			if (!ventanasAbiertasDistintasDeSudoku) {
+			if (!hasOpenViewsDiferentThansSudoku_) {
 				cambiar = true;
-				previaView = view;
-				if (view.getClass().getCanonicalName().toString()
+				viewPrevious_ = view_;
+				if (view_.getClass().getCanonicalName().toString()
 						.compareTo(Constants.VIEW2) == 0) {
 					new FirstGui();
 				} else {
-					if (view.getClass().getCanonicalName().toString()
+					if (view_.getClass().getCanonicalName().toString()
 							.compareTo(Constants.VIEW1) == 0) {
 						new SecondGui();
 					}
 				}
-				previaView.dispose();
+				viewPrevious_.dispose();
 			}
 		}
 		if (!cambiar) {
-			view.present("No se puede cambiar de interfaz ya que puede estar preferencias abiertas \n o esta juganado una partida");
+			view_
+					.present("No se puede cambiar de interfaz ya que puede estar preferencias abiertas \n o esta juganado una partida");
 		}
 	}
 
 	/**
-	 * Inicia un nuevo juego, verificando que sea posible en cuanto al entorno
-	 * que se encuantra
+	 * Inicia un nuevo juego, verificando que sea posible en cuanto al entorno que
+	 * se encuantra
 	 */
-	private void nuevoJuego() {
+	private void newGame()
+	{
 		boolean newGame = false;
 		if (this.verificacion()) {
-			modelo.empezarNuevoJuego(dificultad);
+			model_.newGame(difficulty_);
 			newGame = true;
 		}
 		if (!newGame) {
-			view.present("Cierre todas las ventas del juego para empezar NUEVO JUEGO \n Si ya esta eecutando una partida, primero detengala");
+			view_
+					.present("Cierre todas las ventas del juego para empezar NUEVO JUEGO \n Si ya esta eecutando una partida, primero detengala");
 		}
 
 	}
 
 	/**
 	 * @param prefView
-	 *            setea las preferencias en el modelo
+	 *          setea las preferencias en el modelo
 	 */
-	private void runPreferencias(PreferenciasGui prefView) {
+	private void runPreferencias(PreferenciasGui prefView)
+	{
 		if (prefView.isHard()) {
-			dificultad = Constants.DIFICIL;
+			difficulty_ = Constants.DIFICIL;
 			prefView.dispose();
-			ventanasAbiertasDistintasDeSudoku = false;
-			view = previaView;// retorno a la vista que estaba
+			hasOpenViewsDiferentThansSudoku_ = false;
+			view_ = viewPrevious_;// retorno a la vista que estaba
 		} else {
 			if (prefView.isMedium()) {
-				dificultad = Constants.MEDIANA;
+				difficulty_ = Constants.MEDIANA;
 				prefView.dispose();
-				ventanasAbiertasDistintasDeSudoku = false;
-				view = previaView;// retorno a la vista que estaba
+				hasOpenViewsDiferentThansSudoku_ = false;
+				view_ = viewPrevious_;// retorno a la vista que estaba
 			} else {
 				if (prefView.isEasy()) {
-					dificultad = Constants.FACIL;
+					difficulty_ = Constants.FACIL;
 					prefView.dispose();
-					ventanasAbiertasDistintasDeSudoku = false;
-					view = previaView;// retorno a la vista que estaba
+					hasOpenViewsDiferentThansSudoku_ = false;
+					view_ = viewPrevious_;// retorno a la vista que estaba
 				} else {
 					prefView.present("No ha seleccionado nivel de dificultad");
 				}
@@ -278,18 +315,21 @@ public class GuiController implements IController, Observer {
 		}
 	}
 
-	public Integer getFirst(String cad) {
+	private Integer getFirst(String cad)
+	{
 		// Dada una cadena de la forma "|Int1|Int2,Int3" obtengo Int1
 		return Integer.parseInt(cad.charAt(1) + "");
 
 	}
 
-	public Integer getSecond(String cad) {
+	private Integer getSecond(String cad)
+	{
 		// Dada una cadena de la forma "|Int1|Int2,Int3" obtengo Int2
 		return Integer.parseInt(cad.charAt(3) + "");
 	}
 
-	public Integer getThird(String cad) {
+	private Integer getThird(String cad)
+	{
 		// Dada una cadena de la forma "|Int1|Int2,Int3" obtengo Int3
 		return Integer.parseInt(cad.charAt(5) + "");
 	}
@@ -297,53 +337,24 @@ public class GuiController implements IController, Observer {
 	/**
 	 * Se llama cuando se nesesita el nombre de usuario para ingresar al top-ten
 	 */
-	public void obtenerNombreTopTen() {
+	private void obtenerNombreTopTen()
+	{
 		String msj = "Ingrese su nombre para ingresar al top-ten";
-		String nombre = ((sudoku.view.AbstractView) view).askName(msj);
-		modelo.setNombreUsuarioTopten(nombre);
+		String nombre = ((sudoku.view.AbstractView) view_).askName(msj);
+		model_.setUserNameTopTen(nombre);
 	}
 
-	private void ofrecerPista() {
-		if (!modelo.generarPista()) {
-			view.present("Para solicitar una pista debe iniciar un juego nuevo.");
+	private void provideClue()
+	{
+		if (!model_.generateClue()) {
+			view_.present("Para solicitar una pista debe iniciar un juego nuevo.");
 		}
 
 	}
 
-	private boolean verificacion() {
-		return !modelo.seEstaJugando() && !ventanasAbiertasDistintasDeSudoku;
-
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void update(Observable o, Object arg) {
-		Pair<Integer, Object> par = (Pair<Integer, Object>) arg;
-		// Dibuja la matriz inicial
-		if (par.getFirstElem() == Constants.DIBUJARMATRIZ) {
-			((sudoku.view.AbstractView) view).dibujarNumeros((int[][]) par
-					.getSecondElem());
-		} else {
-			// Dibuja una pista sobre la matriz
-			if (par.getFirstElem() == Constants.DIBUJARPISTA) {
-				Pair<Pair<Integer, Integer>, Integer> pista = (Pair<Pair<Integer, Integer>, Integer>) par
-						.getSecondElem();
-				((sudoku.view.AbstractView) view).setTextinMatrix(pista
-						.getFirstElem().getFirstElem(), pista.getFirstElem()
-						.getSecondElem(), pista.getSecondElem(), par
-						.getFirstElem());
-			} else {
-				// Borra todos los numeros ingresados por el usuario
-				if (par.getFirstElem() == Constants.BORRARJUEGO) {
-					((sudoku.view.AbstractView) view)
-							.dibujarNumeros((int[][]) par.getSecondElem());
-				} else {
-					// setea el tiempo
-					((sudoku.view.AbstractView) view).setTime(par
-							.getSecondElem().toString());
-				}
-			}
-		}
+	private boolean verificacion()
+	{
+		return !model_.isRunningGame() && !hasOpenViewsDiferentThansSudoku_;
 
 	}
 

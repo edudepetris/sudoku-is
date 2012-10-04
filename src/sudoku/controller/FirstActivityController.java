@@ -9,29 +9,32 @@ import sudoku.view.SecondGui;
  * @author karma Controlador de la vista de eleccion de vistas
  * 
  */
-public class FirstActivityController implements IController {
+public class FirstActivityController implements IController
+{
 
-	private FirstActivity view;
+	private FirstActivity	view_;
 
 	@Override
-	public void setView(IView view) {
-		this.view = (FirstActivity) view;
+	public void setView(IView view)
+	{
+		this.view_ = (FirstActivity) view;
 	}
 
 	@Override
-	public void process(String model) {
+	public void process(String model)
+	{
 		// model es el nombre del boton que se presionó
 		if (model.compareTo("Ingresar") == 0) {
-			if (view.isSelectVista1()) {
-				view.dispose();
+			if (view_.isSelectVista1()) {
+				view_.dispose();
 				new FirstGui();
 
 			} else {
-				if (view.isSelectVista2()) {
-					view.dispose();
+				if (view_.isSelectVista2()) {
+					view_.dispose();
 					new SecondGui();
 				} else
-					view.present("No seleccionó ninguna vista");
+					view_.present("No seleccionó ninguna vista");
 			}
 		}
 

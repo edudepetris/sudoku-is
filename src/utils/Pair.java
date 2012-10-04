@@ -1,9 +1,16 @@
 package utils;
 
-public class Pair<T1, T2> {
+/**
+ * @author edu
+ * 
+ * @param <T1>
+ * @param <T2>
+ */
+public class Pair<T1, T2>
+{
 
-	private T1 firstElem;
-	private T2 secondElem;
+	private T1	firstElem;
+	private T2	secondElem;
 
 	public Pair() {
 		this.firstElem = null;
@@ -15,23 +22,28 @@ public class Pair<T1, T2> {
 		this.secondElem = secondElem;
 	}
 
-	public T1 getFirstElem() {
+	public T1 getFirstElem()
+	{
 		return firstElem;
 	}
 
-	public void setFirstElem(T1 firstElem) {
+	public void setFirstElem(T1 firstElem)
+	{
 		this.firstElem = firstElem;
 	}
 
-	public T2 getSecondElem() {
+	public T2 getSecondElem()
+	{
 		return secondElem;
 	}
 
-	public void setSecondElem(T2 secondElem) {
+	public void setSecondElem(T2 secondElem)
+	{
 		this.secondElem = secondElem;
 	}
 
-	public String toString() {
+	public String toString()
+	{
 		String res = "";
 		if ((firstElem == null) & (secondElem == null)) {
 			res = "(null,null)";
@@ -40,8 +52,7 @@ public class Pair<T1, T2> {
 		} else if ((firstElem != null) & (secondElem == null)) {
 			res = "(" + firstElem.toString() + ",null)";
 		} else {
-			res = "(" + firstElem.toString() + "," + secondElem.toString()
-					+ ")";
+			res = "(" + firstElem.toString() + "," + secondElem.toString() + ")";
 		}
 		return res;
 	}

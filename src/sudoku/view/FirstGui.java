@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -19,53 +17,40 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import sudoku.controller.GuiController;
-import sudoku.controller.IController;
 import utils.Constants;
 
 /**
  * @author ELSE Una de las vista grafica del juego
  * 
  */
-public class FirstGui extends sudoku.view.AbstractView {
+public class FirstGui extends sudoku.view.AbstractView
+{
 
-	private JFrame frame = new JFrame();
-	private JPanel contentPane;
-	JTextField matrix[][] = new JTextField[9][9];
-	private final int ALTO = 1;
-	private JLabel lblTiempo;
-
-	private List<String> inm = new LinkedList<String>();
+	private JFrame		frame_			= new JFrame();
+	private JPanel		contentPane_;
+	JTextField				matrix[][]	= new JTextField[9][9];
+	private final int	ALTO				= 1;
+	private JLabel		lblTime_;
 
 	/**
 	 * Create the frame.
 	 */
 	@SuppressWarnings("static-access")
 	public FirstGui() {
-		frame.setTitle("Sudoku-ELSE");
-		((JFrame) frame).setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.setBounds(100, 100, 450, 300);
-		frame.setSize(480, 640);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+		frame_.setTitle("Sudoku-ELSE");
+		((JFrame) frame_).setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame_.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame_.setBounds(100, 100, 450, 300);
+		frame_.setSize(480, 640);
+		frame_.setLocationRelativeTo(null);
+		frame_.setVisible(true);
 
-		inm.add("00");
-		inm.add("40");
-		inm.add("36");
-		inm.add("93");
+		controller_.setView((IView) this);
 
-		// Enlace controlador con vista
-		ListenerGui buttonListener = new ListenerGui();
-		IController controller = GuiController.getIntance();
-		controller.setView((IView) this);
-
-		ListenerMatrix listenerMatrix = new ListenerMatrix();
-		IController controllerMatrix = GuiController.getIntance();
-		controllerMatrix.setView((IView) this);
+		controllerMatrix_.setView((IView) this);
 
 		JMenuBar menuBar = new JMenuBar();
-		frame.setJMenuBar(menuBar);
+		frame_.setJMenuBar(menuBar);
 
 		// menu archivo
 		JMenu mnArchivo = new JMenu("Archivo");
@@ -75,23 +60,23 @@ public class FirstGui extends sudoku.view.AbstractView {
 		mntmNuevo.setMnemonic('N');
 		mnArchivo.add(mntmNuevo);
 		mnArchivo.addSeparator();
-		buttonListener.associate(mntmNuevo, controller);
+		buttonListener_.associate(mntmNuevo, controller_);
 
 		JMenuItem mntmDetener = new JMenuItem("Detener");
 		mnArchivo.add(mntmDetener);
 		mntmDetener.setMnemonic('D');
 		mnArchivo.addSeparator();
-		buttonListener.associate(mntmDetener, controller);
+		buttonListener_.associate(mntmDetener, controller_);
 
 		JMenuItem mntmTopTen = new JMenuItem("Top-Ten");
 		mnArchivo.add(mntmTopTen);
 		mnArchivo.addSeparator();
-		buttonListener.associate(mntmTopTen, controller);
+		buttonListener_.associate(mntmTopTen, controller_);
 
 		JMenuItem mntmSalir = new JMenuItem("Salir");
 		mnArchivo.add(mntmSalir);
 		mntmSalir.setMnemonic('S');
-		buttonListener.associate(mntmSalir, controller);
+		buttonListener_.associate(mntmSalir, controller_);
 		// fin menu archivo
 
 		// menu editar
@@ -103,12 +88,12 @@ public class FirstGui extends sudoku.view.AbstractView {
 		JMenuItem mntmPreferencias = new JMenuItem("Preferencias");
 		mntmPreferencias.setMnemonic('P');
 		mnEditar.add(mntmPreferencias);
-		buttonListener.associate(mntmPreferencias, controller);
+		buttonListener_.associate(mntmPreferencias, controller_);
 
 		JMenuItem mntmCambiarVista = new JMenuItem("Cambiar vista");
 		mntmCambiarVista.setMnemonic('P');
 		mnEditar.add(mntmCambiarVista);
-		buttonListener.associate(mntmCambiarVista, controller);
+		buttonListener_.associate(mntmCambiarVista, controller_);
 		// fin menu editar
 
 		// menu ayuda
@@ -118,27 +103,26 @@ public class FirstGui extends sudoku.view.AbstractView {
 		JMenuItem mntmAcercaDe = new JMenuItem("Acerca de");
 		mntmAcercaDe.setMnemonic('A');
 		mnAyuda.add(mntmAcercaDe);
-		buttonListener.associate(mntmAcercaDe, controller);
+		buttonListener_.associate(mntmAcercaDe, controller_);
 		// fin menu ayuda
 
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		contentPane.setLayout(new BorderLayout(0, 0));
-		frame.setContentPane(contentPane);
+		contentPane_ = new JPanel();
+		contentPane_.setBorder(new EmptyBorder(5, 5, 5, 5));
+		contentPane_.setLayout(new BorderLayout(0, 0));
+		frame_.setContentPane(contentPane_);
 
 		// matriz
 		JPanel panel = new JPanel();
-		contentPane.add(panel, BorderLayout.CENTER);
+		contentPane_.add(panel, BorderLayout.CENTER);
 		GridLayout grilla = new GridLayout(9, 9);
 		panel.setLayout(grilla);
 
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
 				matrix[i][j] = new JTextField();
-				listenerMatrix.associate(matrix[i][j], controllerMatrix, i, j);
+				listenerMatrix_.associate(matrix[i][j], controllerMatrix_, i, j);
 				Font f = new Font("TimesRoman", Font.BOLD, 36);
-				matrix[i][j]
-						.setHorizontalAlignment((int) frame.CENTER_ALIGNMENT);
+				matrix[i][j].setHorizontalAlignment((int) frame_.CENTER_ALIGNMENT);
 				matrix[i][j].setFont(f);
 				matrix[i][j].setCaretColor(Color.WHITE);// color del cursor
 				matrix[i][j].setForeground(Color.WHITE);
@@ -156,30 +140,30 @@ public class FirstGui extends sudoku.view.AbstractView {
 
 		JButton btnResolver = new JButton("Resolver");
 		botonera.add(btnResolver);
-		buttonListener.associate(btnResolver, controller);
+		buttonListener_.associate(btnResolver, controller_);
 
 		JButton btnBorrar = new JButton("Borrar");
 		botonera.add(btnBorrar);
-		buttonListener.associate(btnBorrar, controller);
+		buttonListener_.associate(btnBorrar, controller_);
 
 		JButton btnPista = new JButton("Pista");
 		botonera.add(btnPista);
-		buttonListener.associate(btnPista, controller);
+		buttonListener_.associate(btnPista, controller_);
 
-		contentPane.add(botonera, BorderLayout.SOUTH);
+		contentPane_.add(botonera, BorderLayout.SOUTH);
 
-		lblTiempo = new JLabel();
-		botonera.add(lblTiempo);
+		lblTime_ = new JLabel();
+		botonera.add(lblTime_);
 		// fin botonera
 
 		// dibujarNumeros(matrix);
 	}
 
-	private void pintar_matrix() {
+	private void pintar_matrix()
+	{
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
-				matrix[i][j].setBorder(BorderFactory
-						.createLineBorder(Color.gray));
+				matrix[i][j].setBorder(BorderFactory.createLineBorder(Color.gray));
 				matrix[i][j].setBackground(Color.LIGHT_GRAY);
 			}
 		}
@@ -189,7 +173,8 @@ public class FirstGui extends sudoku.view.AbstractView {
 		pintarCudrado(3, 6, this.ALTO);
 	}
 
-	private void pintarCudrado(int x, int y, int altura) {
+	private void pintarCudrado(int x, int y, int altura)
+	{
 		for (int i = x; i < x + 3; i++) {
 			for (int j = y; j < y + 3; j++) {
 				if (altura == this.ALTO) {
@@ -204,10 +189,11 @@ public class FirstGui extends sudoku.view.AbstractView {
 
 	/**
 	 * @param m
-	 *            Matriz con numeros Dibuja la matriz del sudoku Si se preciono
-	 *            detener se le pasa null y resetea la matriz y el tiempo
+	 *          Matriz con numeros Dibuja la matriz del sudoku Si se preciono
+	 *          detener se le pasa null y resetea la matriz y el tiempo
 	 */
-	public void dibujarNumeros(int[][] m) {
+	public void drawingBoard(int[][] m)
+	{
 		for (int i = 0; i < 9; i++) {
 			for (int j = 0; j < 9; j++) {
 				if (m == null || m[i][j] == 0) {
@@ -223,14 +209,15 @@ public class FirstGui extends sudoku.view.AbstractView {
 				}
 			}
 		}
-		//aca nunca entra 
+		// aca nunca entra
 		if (m == null) {
-			lblTiempo.setText("");
-			
+			lblTime_.setText("");
+
 		}
 	}
 
-	public void setTextinMatrix(int posI, int posJ, int number, int constant) {
+	public void setNumberInSudoku(int posI, int posJ, int number, int constant)
+	{
 		if (constant == Constants.DIBUJARPISTA) {
 			matrix[posI][posJ].setText(number + "");
 			matrix[posI][posJ].setEnabled(false);
@@ -240,13 +227,15 @@ public class FirstGui extends sudoku.view.AbstractView {
 	}
 
 	@Override
-	public void dispose() {
-		frame.dispose();
+	public void dispose()
+	{
+		frame_.dispose();
 	}
 
 	@Override
-	public void setTime(String time) {
-		lblTiempo.setText(time);
+	public void setTime(String time)
+	{
+		lblTime_.setText(time);
 	}
 
 }

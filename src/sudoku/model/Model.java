@@ -1,473 +1,253 @@
 package sudoku.model;
 
-import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.Observable;
+import java.util.Observer;
 
+import sudoku.view.IView;
 import utils.Constants;
 import utils.Pair;
 
-public class Model extends Observable implements Runnable {
+/**
+ * Modelo. maneja toda la logica del sudoku. Interactua con Board y con Time
+ * 
+ */
+public class Model extends Observable
+{
+	
+	private boolean	isNameRequest_;
+	private boolean	isPressStop_;
+	private boolean	isPressResolve_;
+	private boolean	isAskedClue_;
+	private float		nScore_;
+	private int			nDifficulty_;
+	private String	userNameTopTen_;
+	private Time		time_;
 
-	private boolean pedirNombre = false;
-	private boolean llenoSudoku = false;
-	private boolean presionoDetener = false;
-	private boolean cicle;
-	private boolean seEstaJugando = false;
-	private boolean pidioPista = false;
-
-	private long tiempo_inicial = 0;
-	private long tiempoFinal = 0;// tiempo final del juego
-
-	private float puntaje;
-	private int dificultad;
-	private int cantMovimientos = 0;
-	private int cantidadEspaciosLibres = 0;// depende de la matriz que se carge
-	private String nombreUsuarioTopten;
-	private Calendar tiempo;
-	private Thread hilo;
-
-	// clon del tablero de nuevoJuego para poder así restaurar la partidad
-	// (Borrar jugadas) en cualquier momento
-	private int[][] tableroAuxiliar = new int[9][9];
-
-	private int[][] tablero = { { 0, 0, 0, 2, 6, 0, 7, 0, 1 },
-			{ 6, 8, 0, 0, 7, 0, 0, 9, 0 }, { 1, 9, 0, 0, 0, 4, 5, 0, 0 },
-			{ 8, 2, 0, 1, 0, 0, 0, 4, 0 }, { 0, 0, 4, 6, 0, 2, 9, 0, 0 },
-			{ 0, 5, 0, 0, 0, 3, 0, 2, 8 }, { 0, 0, 9, 3, 0, 0, 0, 7, 4 },
-			{ 0, 4, 0, 0, 5, 0, 0, 3, 6 }, { 7, 0, 3, 0, 1, 8, 0, 0, 0 } };
-
-	private int[][] tableroResuelto = { { 4, 3, 5, 2, 6, 9, 7, 8, 1 },
-			{ 6, 8, 2, 5, 7, 1, 4, 9, 3 }, { 1, 9, 7, 8, 3, 4, 5, 6, 2 },
-			{ 8, 2, 6, 1, 9, 5, 3, 4, 7 }, { 3, 7, 4, 6, 8, 2, 9, 1, 5 },
-			{ 9, 5, 1, 7, 4, 3, 6, 2, 8 }, { 5, 1, 9, 3, 2, 6, 8, 7, 4 },
-			{ 2, 4, 8, 9, 5, 7, 1, 3, 6 }, { 7, 6, 3, 4, 1, 8, 2, 5, 9 } };
-
-	// depende de la matriz que se cargue
-	private TopTen topTen;
+	// tablero de sudoku
+	private Board		board_;
+	private TopTen	topTen_;
 
 	public Model() {
-		topTen = TopTen.getIntance();
-		cargarArchivosTopTen();
+		topTen_ = TopTen.getIntance();
+		loadFileTopTen();
+		time_ = Time.getIntance();
 	}
 
-	public int[][] getTablero() {
-		return this.tablero;
-	}
-
-	public int getTableroPos(int i, int j) {
-		return this.tablero[i][j];
-	}
-
-	public void setTablero(int[][] tablero) {
-		this.tablero = tablero;
-	}
-
-	public void setTableroPos(int fil, int col, int number) {
-		this.tablero[fil][col] = number;
-		this.cantMovimientos++;
-	}
-
-	public void timeGo() {
-		tiempo_inicial = System.currentTimeMillis();
-		hilo = new Thread((Runnable) this);
-		hilo.start();
-		seEstaJugando = true;
-		cantMovimientos = 0;
-	}
-
-	public void timeStop() {
-		tiempoFinal = System.currentTimeMillis() - tiempo_inicial;
-		cicle = false;
-		seEstaJugando = false;
-	}
-
-	@Override
-	public void run() {
-		tiempo = Calendar.getInstance();
-		cicle = true;
-		long tiempo_actual = 0;
-		while (cicle) {
-			tiempo.setTimeInMillis(System.currentTimeMillis() - tiempo_inicial);
-			if ((tiempo.getTimeInMillis() / 1000) != tiempo_actual) {
-				setChanged();
-				Pair<Integer, Object> par = new Pair<Integer, Object>();
-				par.setFirstElem(0);
-				par.setSecondElem(tiempo.get(Calendar.MINUTE) + ":"
-						+ tiempo.get(Calendar.SECOND));
-				notifyObservers(par);
-				tiempo_actual = tiempo.getTimeInMillis() / 1000;
-			}
-		}
+	/**
+	 * @param view
+	 *          {@link IView} carga los observadores
+	 */
+	public void loadObserver(IView view)
+	{	
+		this.addObserver((Observer) view);
+		time_.addObserver((Observer) view);
 	}
 
 	/**
 	 * @return {@link Boolean} True ssi se esta corriendo una partida
 	 */
-	public boolean seEstaJugando() {
-		return seEstaJugando;
+	public boolean isRunningGame()
+	{
+		return time_.isRunnig();
 	}
 
 	/**
-	 * corta el juego
+	 * corta el juego si se lleno el sudoku correctamente, si no teiene que
+	 * seguirlo (falta implementar)
 	 */
-	public void cortarJuegoModelo() {
-		if (!presionoDetener) {
-			if (esSudoku() && !tieneEspaciosVacios() && !pidioPista) {
-				llenoSudoku = true;
-				// entonces termino el juego
+	public void endGame()
+	{
+		if (!isPressStop_) {
+			if (board_.isSudoku() && !isAskedClue_ && !isPressResolve_) {
+				board_.setSudokuFill(true);// setea true lleno sudoku en Board
 				// ver que el puntaje debe variar acorde a la dificultad del
 				// juego
-				puntaje = cantMovimientos / tiempoFinal;
-				pedirNombre = true;
+				time_.timeStop();// corta el tiempo
+				nScore_ = board_.getMovementAmount() / time_.getFinalTime();
+				isNameRequest_ = true;// true a la variable pedir nombre
+			} else if (isPressResolve_) {
+				board_.resolverBoard();
+				board_.setSudokuFill(true);
+				isAskedClue_ = true;
+				this.setChanged();
+				Pair<Integer, Object> par = new Pair<Integer, Object>(1,
+						board_.getBoard());
+				this.notifyObservers(par);
+				time_.timeStop();
 			}
+		} else {// se presiono stop
+			time_.timeStop();
 		}
+
+	}
+
+	/**
+	 * @param difficulty
+	 *          Inicia un nuevo juego.
+	 */
+	public void newGame(int difficulty)
+	{
+		isAskedClue_ = false;
+		isPressStop_ = false;
+		isNameRequest_ = false;
+		isPressResolve_ = false;
+		board_ = new Board(difficulty);
+		board_.setSudokuFill(false);
+		this.nDifficulty_ = difficulty;
+		this.setChanged();
+		Pair<Integer, Object> par = new Pair<Integer, Object>(1, board_.getBoard());
+		this.notifyObservers(par);
+		time_.timeGo();
 	}
 
 	/**
 	 * @return true ssi el sudoku ha sido resuelto correctamente
 	 */
-	public boolean isLlenoSudoku() {
-		return llenoSudoku;
+	public boolean isSolvedSudoku()
+	{
+		return board_.isSolvedSudoku();
 	}
 
 	/**
 	 * guarda un usuario en la lista de topTen (en caso de corresponder)
 	 */
-	public void guardarEnTopTen() {
-		topTen.insertar(this.dificultad, nombreUsuarioTopten + " - " + puntaje);
+	public void saveInTopTen()
+	{
+		topTen_.insert(this.nDifficulty_, userNameTopTen_ + " - " + nScore_);
 	}
-	
+
 	/**
-	 * almacena en el archivo "TopTen.txt" toda la lista de topTen con los
-	 * mejores jugadores. Este metodo debe ser llamado al salir del juego
+	 * almacena en el archivo "TopTen.txt" toda la lista de topTen con los mejores
+	 * jugadores. Este metodo debe ser llamado al salir del juego
 	 */
-	public void salvarCambios() {
-		topTen.setTopTen(Constants.FACIL);
-		topTen.setTopTen(Constants.MEDIANA);
-		topTen.setTopTen(Constants.DIFICIL);
+	public void saveChanges()
+	{
+		topTen_.setTopTen(Constants.FACIL);
+		topTen_.setTopTen(Constants.MEDIANA);
+		topTen_.setTopTen(Constants.DIFICIL);
 	}
 
 	/**
 	 * carga las listas de topTen con cada uno de los archivos
 	 */
-	public void cargarArchivosTopTen() {
-		topTen.getTopTen(Constants.FACIL);
-		topTen.getTopTen(Constants.MEDIANA);
-		topTen.getTopTen(Constants.DIFICIL);
+	public void loadFileTopTen()
+	{
+		topTen_.getTopTen(Constants.FACIL);
+		topTen_.getTopTen(Constants.MEDIANA);
+		topTen_.getTopTen(Constants.DIFICIL);
 	}
-	
+
 	/**
-	 * @param dificultad
-	 * @return lista de top ten de la dificultad pasada como parametro 
+	 * @param difficulty
+	 * @return lista de top ten de la dificultad pasada como parametro
 	 */
-	public LinkedList<String> getTopTen(int dificultad) {
-		if (dificultad == Constants.FACIL)
-			return topTen.getListaTopTenEasy();
-		if (dificultad == Constants.MEDIANA)
-			return topTen.getListaTopTenMedium();
-		if (dificultad == Constants.DIFICIL)
-			return topTen.getListaTopTenHard();
+	public LinkedList<String> getTopTen(int difficulty)
+	{
+		if (difficulty == Constants.FACIL)
+			return topTen_.getListaTopTenEasy();
+		if (difficulty == Constants.MEDIANA)
+			return topTen_.getListaTopTenMedium();
+		if (difficulty == Constants.DIFICIL)
+			return topTen_.getListaTopTenHard();
 		return null;
 	}
-	
-		/**
-	 * @param m
-	 *            : matriz del juego
-	 * @return true ssi la matriz del juego fue completada correctamente
-	 */
-	private boolean esSudoku() {
-		if (repetidosEnCuadriculas())
-			return false;
-		for (int i = 0; i < tablero.length; i++) {
-			for (int j = 0; j < tablero.length; j++) {
-				if (existeEnFila(tablero, i, tablero[i][j])
-						|| existeEnColumna(tablero, j, tablero[i][j]))
-					return false;
-			}
-		}
-		return true;
-	}
 
 	/**
-	 * @return true ssi existe algun elemento en el tablero tal que
-	 *         tablero[i][j] == 0
+	 * * @return {@link Boolean} true ssi se nesesita el nombre para juardar en *
+	 * lista top-ten EL controlador esta pendiente de esto
+	 * 
+	 * pedirNombre
 	 */
-	private boolean tieneEspaciosVacios() {
-		for (int i = 0; i < tablero.length; i++)
-			for (int j = 0; j < tablero.length; j++)
-				if (tablero[i][j] == 0)
-					return true;
-		return false;
-	}
-
-	/**
-	 * @param m
-	 * @param i
-	 * @param valor
-	 * @return true ssi existe otro numero igual a valor dentro de la fila i en
-	 *         la matriz m
-	 */
-	private boolean existeEnFila(int[][] m, int i, int valor) {
-		for (int k = 0; k < tablero.length; k++)
-			if (k != i && m[i][k] == valor)
-				return true;
-		return false;
-	}
-
-	/**
-	 * @param m
-	 * @param j
-	 * @param valor
-	 * @return true ssi existe otro numero igual a valor dentro de la columna j
-	 *         en la matriz m
-	 */
-	private boolean existeEnColumna(int[][] m, int j, int valor) {
-		for (int k = 0; k < tablero.length; k++)
-			if (k != j && m[k][j] == valor)
-				return true;
-		return false;
-	}
-
-	/**
-	 * @param m
-	 * @return true ssi existen elementos iguales dentro de la misma cuadricula
-	 *         o existe algun 0
-	 */
-	private boolean repetidosEnCuadriculas() {
-		for (int i = 0; i < tablero.length; i++) {
-			if (seRepitenEnLista(numerosGrupo(i)))
-				return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @param list
-	 * @return true ssi existen dos elementos iguales en la lista, o si alguno
-	 *         de ellos es 0
-	 */
-	private boolean seRepitenEnLista(LinkedList<Integer> list) {
-		for (int i = 0; i < list.size(); i++) {
-			for (int j = i + 1; j < list.size(); j++) {
-				if (list.get(i) == list.get(j))
-					return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * @return true ssi se pulsa la opcion Resolver mientras se esta jugando una
-	 *         partida
-	 */
-	public boolean getTableroResuelto() {
-		if (this.seEstaJugando()) {
-//----------Me parece que el problema de la pista 0 esta por aca!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			tablero = tableroResuelto;
-			llenoSudoku = true;
-			pidioPista = true;
-			this.seEstaJugando = false;
-			this.setTablero(tablero);
-			this.setChanged();
-			Pair<Integer, Object> par = new Pair<Integer, Object>(1, tablero);
-			this.notifyObservers(par);
-			this.timeStop();
-			return true;
-		} else
-			return false;
-	}
-
-	/**
-	 * @param m
-	 *            : matriz del tablero
-	 * @return retorna una lista con los numero que estan la grupo elejido del
-	 *         tablero
-	 */
-	public LinkedList<Integer> numerosGrupo(int grupo) {
-		int i = 0, j = 0, maxJ = 0, maxI = 0;
-		switch (grupo) {
-		case 1:
-			i = 0;
-			j = 0;
-			maxI = 3;
-			maxJ = 3;
-			break;
-		case 2:
-			i = 0;
-			j = 3;
-			maxJ = 6;
-			maxI = 3;
-			break;
-		case 3:
-			i = 0;
-			j = 6;
-			maxJ = 9;
-			maxI = 3;
-			break;
-		case 4:
-			i = 3;
-			j = 0;
-			maxJ = 3;
-			maxI = 6;
-			break;
-		case 5:
-			i = 3;
-			j = 3;
-			maxJ = 6;
-			maxI = 6;
-			break;
-		case 6:
-			i = 3;
-			j = 6;
-			maxJ = 9;
-			maxI = 6;
-			break;
-		case 7:
-			i = 6;
-			j = 0;
-			maxJ = 3;
-			maxI = 9;
-			break;
-		case 8:
-			i = 6;
-			j = 3;
-			maxJ = 6;
-			maxI = 9;
-			break;
-		case 9:
-			i = 6;
-			j = 6;
-			maxJ = 9;
-			maxI = 9;
-			break;
-		}// end case
-
-		LinkedList<Integer> lista = new LinkedList<Integer>();
-		for (int a = i; a < maxI; a++)
-			for (int b = j; b < maxJ; b++)
-				if (tablero[a][b] != 0)
-					lista.add(tablero[a][b]);
-
-		return lista;
-	}
-
-	public void empezarNuevoJuego(int dificultad) {
-		llenoSudoku = false;
-		int[][] tablero;
-		this.dificultad = dificultad;
-		if (dificultad == Constants.FACIL) {
-			// Generador de tablero de acuerdo a la dificultad
-			tablero = this.tablero;
-			// clono el tablero.
-			for (int i = 0; i < 9; i++) {
-				for (int j = 0; j < 9; j++) {
-					tableroAuxiliar[i][j] = tablero[i][j];
-				}
-			}
-
-		} else {
-			
-			
-//  FALTA INCIALIZAR EL TABLERO DE FORMA ADECUADA DE ACUERDO A LA DIFICULTAD
-			if (dificultad == Constants.MEDIANA) {
-				tablero = this.tablero;
-			} else {
-				tablero = this.tablero;
-			}
-		}
-		this.seEstaJugando = true;
-		this.cantMovimientos = 0;
-		this.setTablero(tablero);
-		this.setChanged();
-		Pair<Integer, Object> par = new Pair<Integer, Object>(1, tablero);
-		this.notifyObservers(par);
-		this.timeGo();
-	}
-
-	/**
-	 * * @return {@link Boolean} true ssi se nesesita el nombre para juardar en
-	 * * lista top-ten EL controlador esta pendiente de esto
-	 */
-	public boolean pedirNombre() {
-		return pedirNombre;
+	public boolean nameRequest()
+	{
+		return isNameRequest_;
 	}
 
 	/**
 	 * @param namemodelo
-	 *            .salvarCambios(); modifica el nombre de usuario topTen
+	 *          {@link String} modifica el nombre de usuario topTen
 	 */
-	public void setNombreUsuarioTopten(String name) {
-		nombreUsuarioTopten = name;
+	public void setUserNameTopTen(String name)
+	{
+		userNameTopTen_ = name;
 	}
 
-	public int cantidadMovimiento() {
-		return cantMovimientos;
+	/**
+	 * @return cantidad de movimientos realizados por el usuario
+	 */
+	public int getMovementAmount()
+	{
+		return board_.getMovementAmount();
 	}
 
-	public int cantidadEspacioLibres() {
-		return cantidadEspaciosLibres;
+	/**
+	 * @return cantida de espacios libres en el sudoku
+	 */
+	public int getAmountFreeSpace()
+	{
+		return board_.getFreeSpacesOnBoard();
 	}
 
-	public void setFalseSePresionoDetener() {
-		this.presionoDetener = false;
+	/**
+	 * setea true a la variable presiono stop
+	 */
+	public void setTruePressStop()
+	{
+		this.isPressStop_ = true;
 	}
 
 	/**
 	 * @return true ssi se genero una pista, false en caso contrario (matriz
 	 *         cargada correctamente)
 	 */
-	public boolean generarPista() {
-		boolean pistaGenerada = false;
-		int col = 0;
-		int fil = 0;
-		if (this.seEstaJugando) {
-			col = 0;
-			while ((!pistaGenerada) && (col < tablero.length)) {
-				fil = 0;
-				while ((!pistaGenerada) && (fil < tablero.length)) {
-					if ((tablero[fil][col] == 0)
-							|| (tablero[fil][col] != tableroResuelto[fil][col])) {
-						tablero[fil][col] = tableroResuelto[fil][col];
-						pistaGenerada = true;
-					}
-					if (!pistaGenerada) {
-						fil++;
-					}
-				}
-				if (!pistaGenerada) {
-					col++;
-				}
-			}
+	public boolean generateClue()
+	{
+		boolean generatedClue = false;
+		if (time_.isRunnig()) {
+			generatedClue = board_.isGenerateClue();
 		}
-		if (pistaGenerada) {
-			pidioPista = true;
-			Pair<Integer, Integer> pos = new Pair<Integer, Integer>(fil, col);
+		if (generatedClue) {
+			isAskedClue_ = true;
+			Pair<Integer, Integer> pos = new Pair<Integer, Integer>(
+					board_.getRowClue(), board_.getColClue());
 			Pair<Pair<Integer, Integer>, Integer> pista = new Pair<Pair<Integer, Integer>, Integer>(
-					pos, tableroResuelto[fil][col]);
-			System.out.println("1:"+tablero[fil][col] + "    2:"+tableroResuelto[fil][col]);
+					pos, board_.getGeneratedClue());
 			Pair<Integer, Object> par = new Pair<Integer, Object>(
 					Constants.DIBUJARPISTA, pista);
 			setChanged();
 			notifyObservers(par);
 		}
-		return pistaGenerada;
+		return generatedClue;
 	}
 
 	/**
 	 * Restaura el tablero al que se inicio con nuevo juego
 	 */
-	public void restaurar() {
-		// clono el tablero.
-		for (int i = 0; i < 9; i++) {
-			for (int j = 0; j < 9; j++) {
-				this.tablero[i][j] = this.tableroAuxiliar[i][j];
-				cantMovimientos += cantMovimientos;
-			}
-		}
+	public void restoreBoard()
+	{
+		board_.restoreBoard();
 		Pair<Integer, int[][]> par = new Pair<Integer, int[][]>(
-				Constants.BORRARJUEGO, this.tablero);
+				Constants.BORRARJUEGO, board_.getBoard());
 		setChanged();
 		notifyObservers(par);
+	}
+
+	/**
+	 * @param posI
+	 *          {@link Integer}
+	 * @param posJ
+	 *          {@link Integer}
+	 * @param number
+	 *          {@link Integer} setea la posicion dada en el Board.
+	 */
+	public void setBoardPos(int posI, int posJ, int number)
+	{
+		board_.setBoardPos(posI, posJ, number);
+	}
+
+	public void setTrueIsPressResolve()
+	{
+		isPressResolve_ = true;
 	}
 }

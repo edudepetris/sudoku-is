@@ -15,62 +15,56 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.border.EmptyBorder;
 
-import sudoku.controller.GuiController;
-import sudoku.controller.IController;
 import utils.Constants;
 
 /**
  * @author interfaz de usuario con menu al costado del tablero, incluye iconos
  * 
  */
-public class SecondGui extends sudoku.view.AbstractView {
+public class SecondGui extends sudoku.view.AbstractView
+{
 
-	private JFrame frame = new JFrame();
+	private JFrame			frame_				= new JFrame();
+	private final Color	CELESTE				= new Color(155, 170, 190);
+	private final Color	CELESTE_BOTON	= new Color(0, 0, 255);
 
-	private final Color CELESTE = new Color(155, 170, 190);
-	private final Color CELESTE_BOTON = new Color(0, 0, 255);
-
-	private JPanel contentPane;
-	JTextField matrix[][] = new JTextField[9][9];
-	private final int ALTO = 1;
-	private JLabel lblTiempo;
+	private JPanel			contentPane_;
+	JTextField					matrix[][]		= new JTextField[9][9];
+	private final int		ALTO					= 1;
+	private JLabel			lblTime_;
 
 	/**
 	 * Create the frame.
 	 */
 	@SuppressWarnings("static-access")
 	public SecondGui() {
-		frame.setTitle("Sudoku-ELSE");
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.setBounds(100, 100, 450, 300);
-		frame.setSize(900, 600);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+		frame_.setTitle("Sudoku-ELSE");
+		frame_.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame_.setBounds(100, 100, 450, 300);
+		frame_.setSize(900, 600);
+		frame_.setLocationRelativeTo(null);
+		frame_.setVisible(true);
 
-		ListenerGui buttonListener = new ListenerGui();
-		IController controller = GuiController.getIntance();
-		controller.setView((IView) this);
+		controller_.setView((IView) this);
 
-		ListenerMatrix listenerMatrix = new ListenerMatrix();
-		IController controllerMatrix = GuiController.getIntance();
-		controllerMatrix.setView((IView) this);
+		controllerMatrix_.setView((IView) this);
 
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		contentPane.setLayout(new BorderLayout(0, 0));
-		frame.setContentPane(contentPane);
+		contentPane_ = new JPanel();
+		contentPane_.setBorder(new EmptyBorder(5, 5, 5, 5));
+		contentPane_.setLayout(new BorderLayout(0, 0));
+		frame_.setContentPane(contentPane_);
 
 		// matriz
 		JPanel panel = new JPanel();
-		contentPane.add(panel, BorderLayout.CENTER);
+		contentPane_.add(panel, BorderLayout.CENTER);
 		GridLayout grilla = new GridLayout(9, 9);
 		panel.setLayout(grilla);
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
 				matrix[i][j] = new JTextField();
-				listenerMatrix.associate(matrix[i][j], controllerMatrix, i, j);
+				listenerMatrix_.associate(matrix[i][j], controllerMatrix_, i, j);
 				Font f = new Font("TimesRoman", Font.BOLD, 36);
-				matrix[i][j].setHorizontalAlignment((int) frame.CENTER_ALIGNMENT);
+				matrix[i][j].setHorizontalAlignment((int) frame_.CENTER_ALIGNMENT);
 				matrix[i][j].setFont(f);
 				matrix[i][j].setCaretColor(Color.WHITE);// color del cursor
 				matrix[i][j].setForeground(Color.WHITE);
@@ -83,23 +77,23 @@ public class SecondGui extends sudoku.view.AbstractView {
 
 		// barra izquierda
 		JToolBar toolBar = new JToolBar(JToolBar.VERTICAL);
-		contentPane.add(toolBar, BorderLayout.WEST);
+		contentPane_.add(toolBar, BorderLayout.WEST);
 
 		JButton btnNuevoJuego = new JButton("Nuevo Juego   ", new ImageIcon(
 				"src/sudoku/view/imagenes/newGame.png"));
 		btnNuevoJuego.setForeground(CELESTE_BOTON);
 		btnNuevoJuego.setBorder(null);
 		toolBar.add(btnNuevoJuego);
-		buttonListener.associate(btnNuevoJuego, controller);
+		buttonListener_.associate(btnNuevoJuego, controller_);
 
 		toolBar.addSeparator();
 
-		JButton btnDetener = new JButton("Detener               ",
-				new ImageIcon("src/sudoku/view/imagenes/detener.png"));
+		JButton btnDetener = new JButton("Detener               ", new ImageIcon(
+				"src/sudoku/view/imagenes/detener.png"));
 		btnDetener.setForeground(CELESTE_BOTON);
 		btnDetener.setBorder(null);
 		toolBar.add(btnDetener);
-		buttonListener.associate(btnDetener, controller);
+		buttonListener_.associate(btnDetener, controller_);
 
 		toolBar.addSeparator();
 
@@ -108,7 +102,7 @@ public class SecondGui extends sudoku.view.AbstractView {
 		btnResolver.setBorder(null);
 		btnResolver.setForeground(CELESTE_BOTON);
 		toolBar.add(btnResolver);
-		buttonListener.associate(btnResolver, controller);
+		buttonListener_.associate(btnResolver, controller_);
 
 		toolBar.addSeparator();
 
@@ -117,14 +111,14 @@ public class SecondGui extends sudoku.view.AbstractView {
 		btnBorrar.setBorder(null);
 		btnBorrar.setForeground(CELESTE_BOTON);
 		toolBar.add(btnBorrar);
-		buttonListener.associate(btnBorrar, controller);
+		buttonListener_.associate(btnBorrar, controller_);
 
 		JButton btnPista = new JButton("Pista                ", new ImageIcon(
 				"src/sudoku/view/imagenes/pista.png"));
 		toolBar.add(btnPista);
 		btnPista.setBorder(null);
 		btnPista.setForeground(CELESTE_BOTON);
-		buttonListener.associate(btnPista, controller);
+		buttonListener_.associate(btnPista, controller_);
 
 		toolBar.addSeparator();
 
@@ -133,57 +127,58 @@ public class SecondGui extends sudoku.view.AbstractView {
 		btnAyuda.setBorder(null);
 		btnAyuda.setForeground(CELESTE_BOTON);
 		toolBar.add(btnAyuda);
-		buttonListener.associate(btnAyuda, controller);
+		buttonListener_.associate(btnAyuda, controller_);
 
 		toolBar.addSeparator();
 		// fin botonera izquierda
 
 		// inicio botonera derecha
 		JToolBar toolBar2 = new JToolBar(JToolBar.VERTICAL);
-		contentPane.add(toolBar2, BorderLayout.EAST);
+		contentPane_.add(toolBar2, BorderLayout.EAST);
 
 		JButton btnCambVista = new JButton("Cambiar vista    ", new ImageIcon(
 				"src/sudoku/view/imagenes/swapGui.png"));
 		btnCambVista.setBorder(null);
 		btnCambVista.setForeground(CELESTE_BOTON);
 		toolBar2.add(btnCambVista);
-		buttonListener.associate(btnCambVista, controller);
+		buttonListener_.associate(btnCambVista, controller_);
 
 		toolBar2.addSeparator();
 
-		JButton btnPreferencias = new JButton("Preferencias      ",
-				new ImageIcon("src/sudoku/view/imagenes/preferencias.png"));
+		JButton btnPreferencias = new JButton("Preferencias      ", new ImageIcon(
+				"src/sudoku/view/imagenes/preferencias.png"));
 		btnPreferencias.setBorder(null);
 		btnPreferencias.setForeground(CELESTE_BOTON);
 		toolBar2.add(btnPreferencias);
-		buttonListener.associate(btnPreferencias, controller);
+		buttonListener_.associate(btnPreferencias, controller_);
 
 		toolBar2.addSeparator();
 
-		JButton btnTopTen = new JButton("Top-Ten               ",
-				new ImageIcon("src/sudoku/view/imagenes/topten.png"));
+		JButton btnTopTen = new JButton("Top-Ten               ", new ImageIcon(
+				"src/sudoku/view/imagenes/topten.png"));
 		toolBar2.add(btnTopTen);
 		btnTopTen.setBorder(null);
 		btnTopTen.setForeground(CELESTE_BOTON);
-		buttonListener.associate(btnTopTen, controller);
+		buttonListener_.associate(btnTopTen, controller_);
 
-		JButton btnSalir = new JButton("Salir                    ",
-				new ImageIcon("src/sudoku/view/imagenes/salir.png"));
+		JButton btnSalir = new JButton("Salir                    ", new ImageIcon(
+				"src/sudoku/view/imagenes/salir.png"));
 		btnSalir.setBorder(null);
 		btnSalir.setForeground(CELESTE_BOTON);
 		toolBar2.add(btnSalir);
-		buttonListener.associate(btnSalir, controller);
+		buttonListener_.associate(btnSalir, controller_);
 
-		lblTiempo = new JLabel();
-		toolBar2.add(lblTiempo);
+		lblTime_ = new JLabel();
+		toolBar2.add(lblTime_);
 		// fin botonera
 	}
 
-	private void pintar_matrix() {
+	private void pintar_matrix()
+	{
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
-				matrix[i][j].setBorder(BorderFactory
-						.createLineBorder(Color.LIGHT_GRAY));
+				matrix[i][j]
+						.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 				matrix[i][j].setBackground(CELESTE);
 			}
 		}
@@ -193,12 +188,12 @@ public class SecondGui extends sudoku.view.AbstractView {
 		pintarCudrado(3, 6, this.ALTO);
 	}
 
-	private void pintarCudrado(int x, int y, int altura) {
+	private void pintarCudrado(int x, int y, int altura)
+	{
 		for (int i = x; i < x + 3; i++) {
 			for (int j = y; j < y + 3; j++) {
 				if (altura == this.ALTO) {
-					matrix[i][j].setBorder(BorderFactory
-							.createLineBorder(Color.WHITE));
+					matrix[i][j].setBorder(BorderFactory.createLineBorder(Color.WHITE));
 					matrix[i][j].setBackground(Color.LIGHT_GRAY);
 				} else
 					matrix[i][j].setBorder(BorderFactory.createEtchedBorder());
@@ -208,10 +203,11 @@ public class SecondGui extends sudoku.view.AbstractView {
 
 	/**
 	 * @param m
-	 *            Matriz con numeros Dibuja la matriz del sudoku Si se preciono
-	 *            detener se le pasa null y resetea la matriz y el tiempo
+	 *          Matriz con numeros Dibuja la matriz del sudoku Si se preciono
+	 *          detener se le pasa null y resetea la matriz y el tiempo
 	 */
-	public void dibujarNumeros(int[][] m) {
+	public void drawingBoard(int[][] m)
+	{
 		for (int i = 0; i < 9; i++) {
 			for (int j = 0; j < 9; j++) {
 				if (m == null || m[i][j] == 0) {
@@ -228,12 +224,12 @@ public class SecondGui extends sudoku.view.AbstractView {
 			}
 		}
 		if (m == null) {
-			lblTiempo.setText("");
+			lblTime_.setText("");
 		}
 	}
 
-
-	public void setTextinMatrix(int posI, int posJ, int number, int constant) {
+	public void setNumberInSudoku(int posI, int posJ, int number, int constant)
+	{
 		if (constant == Constants.DIBUJARPISTA) {
 			matrix[posI][posJ].setText(number + "");
 			matrix[posI][posJ].setEnabled(false);
@@ -243,14 +239,16 @@ public class SecondGui extends sudoku.view.AbstractView {
 	}
 
 	@Override
-	public void dispose() {
-		frame.dispose();
-		
+	public void dispose()
+	{
+		frame_.dispose();
+
 	}
 
 	@Override
-	public void setTime(String time) {
-		lblTiempo.setText(time);		
+	public void setTime(String time)
+	{
+		lblTime_.setText(time);
 	}
-	
+
 }

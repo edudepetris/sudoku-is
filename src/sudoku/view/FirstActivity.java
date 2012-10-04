@@ -10,6 +10,7 @@ import javax.swing.JRadioButton;
 
 import sudoku.controller.FirstActivityController;
 import sudoku.controller.IController;
+import sudoku.controller.ListenerGui;
 
 /**
  * @author Vista principal para la eleccion de la interfaz
@@ -17,8 +18,8 @@ import sudoku.controller.IController;
  */
 public class FirstActivity extends JFrame implements IView {
 	private static final long serialVersionUID = 1L;
-	private JRadioButton radioGui1;
-	private JRadioButton radioGui2;
+	private JRadioButton radioGui1_;
+	private JRadioButton radioGui2_;
 
 	public FirstActivity() {
 		super("Bienvenido a Sudoku-ELSE");
@@ -38,24 +39,24 @@ public class FirstActivity extends JFrame implements IView {
 
 		buttonListener.associate(btnsignIn, fController);
 
-		radioGui1 = new JRadioButton("Vista 1");
-		getContentPane().add(radioGui1, BorderLayout.WEST);
+		radioGui1_ = new JRadioButton("Vista 1");
+		getContentPane().add(radioGui1_, BorderLayout.WEST);
 
-		radioGui2 = new JRadioButton("Vista 2");
-		getContentPane().add(radioGui2, BorderLayout.EAST);
+		radioGui2_ = new JRadioButton("Vista 2");
+		getContentPane().add(radioGui2_, BorderLayout.EAST);
 
 		// relacion logica
-		btnG.add(radioGui2);
-		btnG.add(radioGui1);
+		btnG.add(radioGui2_);
+		btnG.add(radioGui1_);
 
 	}
 
 	public boolean isSelectVista1() {
-		return radioGui1.isSelected();
+		return radioGui1_.isSelected();
 	}
 
 	public boolean isSelectVista2() {
-		return radioGui2.isSelected();
+		return radioGui2_.isSelected();
 	}
 
 	@Override
@@ -64,5 +65,4 @@ public class FirstActivity extends JFrame implements IView {
 
 	}
 
-	
 }
